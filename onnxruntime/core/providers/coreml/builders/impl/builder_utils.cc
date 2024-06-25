@@ -143,12 +143,19 @@ void SetTensorTypeInfo(MILSpec::TensorType& tensor_type, MILSpec::DataType data_
                        std::optional<gsl::span<const int64_t>> shape) {
   tensor_type.set_datatype(data_type);
   if (shape) {
-    tensor_type.set_rank(shape->size());
-    for (const auto& dim : *shape) {
-      if (dim >= 0) {
-        tensor_type.add_dimensions()->mutable_constant()->set_size(narrow<int32_t>(dim));
-      } else {
-        tensor_type.add_dimensions()->mutable_unknown()->set_variadic(false);
+    auto rank = shape->size();
+    if (rank == 0) {
+      // CoreML scalar has shape {1}
+      tensor_type.set_rank(1);
+      tensor_type.add_dimensions()->mutable_constant()->set_size(1);
+    } else {
+      tensor_type.set_rank(rank);
+      for (const auto& dim : *shape) {
+        if (dim >= 0) {
+          tensor_type.add_dimensions()->mutable_constant()->set_size(narrow<int32_t>(dim));
+        } else {
+          tensor_type.add_dimensions()->mutable_unknown()->set_variadic(false);
+        }
       }
     }
   }
@@ -158,12 +165,19 @@ void SetTensorTypeInfo(MILSpec::TensorType& tensor_type, MILSpec::DataType data_
                        const ONNX_NAMESPACE::TensorShapeProto* shape) {
   tensor_type.set_datatype(data_type);
   if (shape) {
-    tensor_type.set_rank(shape->dim_size());
-    for (const auto& dim : shape->dim()) {
-      if (dim.has_dim_value()) {
-        tensor_type.add_dimensions()->mutable_constant()->set_size(narrow<int32_t>(dim.dim_value()));
-      } else {
-        tensor_type.add_dimensions()->mutable_unknown()->set_variadic(false);
+    auto rank = shape->dim_size();
+    if (rank == 0) {
+      // CoreML scalar has shape {1}
+      tensor_type.set_rank(1);
+      tensor_type.add_dimensions()->mutable_constant()->set_size(1);
+    } else {
+      tensor_type.set_rank(rank);
+      for (const auto& dim : shape->dim()) {
+        if (dim.has_dim_value()) {
+          tensor_type.add_dimensions()->mutable_constant()->set_size(narrow<int32_t>(dim.dim_value()));
+        } else {
+          tensor_type.add_dimensions()->mutable_unknown()->set_variadic(false);
+        }
       }
     }
   }
