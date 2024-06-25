@@ -140,11 +140,11 @@ void CreateCoreMLWeight(CoreML::Specification::WeightParams& weight, gsl::span<c
 
 namespace {
 void SetTensorTypeInfo(MILSpec::TensorType& tensor_type, MILSpec::DataType data_type,
-                       std::optional<gsl::span<const int64_t>> shape) {
+                       std::optional<gsl::span<const int64_t>> shape, bool convert_scalar = false) {
   tensor_type.set_datatype(data_type);
   if (shape) {
     auto rank = shape->size();
-    if (rank == 0) {
+    if (convert_scalar && rank == 0) {
       // CoreML scalar has shape {1}
       tensor_type.set_rank(1);
       tensor_type.add_dimensions()->mutable_constant()->set_size(1);
@@ -162,11 +162,11 @@ void SetTensorTypeInfo(MILSpec::TensorType& tensor_type, MILSpec::DataType data_
 }
 
 void SetTensorTypeInfo(MILSpec::TensorType& tensor_type, MILSpec::DataType data_type,
-                       const ONNX_NAMESPACE::TensorShapeProto* shape) {
+                       const ONNX_NAMESPACE::TensorShapeProto* shape, bool convert_scalar = false) {
   tensor_type.set_datatype(data_type);
   if (shape) {
     auto rank = shape->dim_size();
-    if (rank == 0) {
+    if (convert_scalar && rank == 0) {
       // CoreML scalar has shape {1}
       tensor_type.set_rank(1);
       tensor_type.add_dimensions()->mutable_constant()->set_size(1);
@@ -295,13 +295,13 @@ template MILSpec::Value CreateScalarTensorValue(const int32_t& data);
 template MILSpec::Value CreateScalarTensorValue(const std::string& data);
 template MILSpec::Value CreateScalarTensorValue(const bool& data);
 
-COREML_SPEC::MILSpec::NamedValueType CreateNamedTensorValueType(const NodeArg& node_arg) {
+COREML_SPEC::MILSpec::NamedValueType CreateNamedTensorValueType(const NodeArg& node_arg, bool convert_scalar) {
   MILSpec::NamedValueType nvt;
   nvt.set_name(node_arg.Name());
   MILSpec::TensorType& tensor_type = *nvt.mutable_type()->mutable_tensortype();
 
   SetTensorTypeInfo(tensor_type, OnnxDataTypeToMILSpec(node_arg.TypeAsProto()->tensor_type().elem_type()),
-                    node_arg.Shape());
+                    node_arg.Shape(), convert_scalar);
 
   return nvt;
 }
@@ -322,7 +322,7 @@ void AddOperationOutput(COREML_SPEC::MILSpec::Operation& op, const NodeArg& outp
   MILSpec::TensorType& tensor_type = *value.mutable_tensortype();
 
   SetTensorTypeInfo(tensor_type, OnnxDataTypeToMILSpec(output.TypeAsProto()->tensor_type().elem_type()),
-                    output.Shape());
+                    output.Shape(), /*convert_scalar*/ true);
 }
 
 void AddPadTypeAndPads(COREML_SPEC::MILSpec::Operation& op, ModelBuilder& model_builder, std::string_view op_type,

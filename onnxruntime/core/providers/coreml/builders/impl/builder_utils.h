@@ -115,7 +115,7 @@ COREML_SPEC::MILSpec::Value CreateScalarTensorValue(const T& data);
 
 /// <summary>Create a NamedValueType from an ONNX tensor NodeArg.</summary>
 /// <remarks>Used to create inputs for the 'main' function in an ML Program.</remarks>
-COREML_SPEC::MILSpec::NamedValueType CreateNamedTensorValueType(const NodeArg& node_arg);
+COREML_SPEC::MILSpec::NamedValueType CreateNamedTensorValueType(const NodeArg& node_arg, bool convert_scalar = false);
 
 /// <summary>
 /// Add an input argument to a MILSpec::Operation
