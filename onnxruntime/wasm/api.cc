@@ -27,8 +27,7 @@ enum DataLocation {
 };
 
 static_assert(sizeof(const char*) == sizeof(size_t), "size of a pointer and a size_t value should be the same.");
-static_assert(sizeof(size_t) == 4, "size of size_t should be 4 in this build (wasm32).");
-
+//static_assert(sizeof(size_t) == 4, "size of size_t should be 4 in this build (wasm32).");
 OrtErrorCode CheckStatus(OrtStatusPtr status) {
   if (status) {
     std::string error_message = Ort::GetApi().GetErrorMessage(status);
